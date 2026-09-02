@@ -2,6 +2,9 @@
 pragma solidity ^0.8.4;
 
 import {BaseContract} from "test/helper/BaseContract.sol";
+import {TokenShop} from "src/TokenShop.sol";
+import {MyToken} from "src/MyToken.sol";
+import {TestContract} from "test/mocks/TestContract.sol";
 
 /// @title TokenShopUnitTest
 /// @notice Unit tests for the TokenShop and MyToken contracts.
@@ -41,9 +44,62 @@ contract TokenShopUnitTest is BaseContract {
 
         vm.prank(minter1);
         (bool success,) = address(tokenShop).call{value: 2 ether}("");
-
         assertTrue(success);
 
         assertEq(myToken.balanceOf(minter1), tokenShop.amountToBuy(2 ether));
+    }
+
+    /**
+     * @notice Verifies that buying tokens reverts when zero ETH is sent.
+     */
+    function test_buyTokens_RevertIfETHAmountIsZero() external {
+        _grantRole();
+
+        vm.prank(minter1);
+        (bool success,) = address(tokenShop).call{value: 0 ether}("");
+        assertFalse(success);
+    }
+
+    /**
+     * @notice Verifies that the owner can withdraw deposited ETH.
+     */
+    function test_withdraw_SucceedsForOwner() external {
+        _deposit(2 ether);
+
+        vm.prank(admin);
+        tokenShop.withdraw();
+
+        assertEq(admin.balance, 2 ether);
+        assertEq(address(tokenShop).balance, 0);
+    }
+
+    /**
+     * @notice Verifies that withdrawal reverts when the TokenShop has no funds.
+     */
+    function test_withdraw_RevertIfNoFundsDeposited() external {
+        vm.prank(admin);
+        vm.expectRevert(TokenShop.NoFundToWithdraw.selector);
+        tokenShop.withdraw();
+    }
+
+    /**
+     * @notice Verifies that withdrawal reverts when the ETH transfer fails.
+     */
+    function test_withdraw_RevertIfTransferFails() external {
+        _deposit(2 ether);
+
+        TestContract testContract = new TestContract();
+        _transferOwnership(address(testContract));
+
+        vm.prank(address(testContract));
+        vm.expectRevert(TokenShop.WithdrawFailed.selector);
+        tokenShop.withdraw();
+    }
+
+    /**
+     * @notice Verifies that the Chainlink ETH/USD price is returned correctly.
+     */
+    function test_getChainlinkETHPrice_ReturnsETHPriceInUSD() external view {
+        assertEq(tokenShop.getChainlinkETHPrice(), 244500000000);
     }
 }

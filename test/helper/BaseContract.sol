@@ -52,4 +52,28 @@ contract BaseContract is Test {
         vm.prank(admin);
         myToken.grantRole(minterRole, address(tokenShop));
     }
+
+    /**
+     * @notice Deposits ETH into the TokenShop contract.
+     * @dev Grants the required minter role and deposits the specified amount
+     *      of ETH into the TokenShop contract.
+     * @param amount The amount of ETH to deposit.
+     */
+    function _deposit(uint256 amount) internal {
+        _grantRole();
+
+        vm.prank(minter1);
+        (bool success,) = address(tokenShop).call{value: amount}("");
+        assertTrue(success);
+    }
+
+    /**
+     * @notice Transfers ownership of the TokenShop contract to a new owner.
+     * @dev Transfers ownership of the TokenShop contract to a new owner.
+     * @param newOwner The address to receive ownership of the TokenShop contract.
+     */
+    function _transferOwnership(address newOwner) internal {
+        vm.prank(admin);
+        tokenShop.transferOwnership(newOwner);
+    }
 }
