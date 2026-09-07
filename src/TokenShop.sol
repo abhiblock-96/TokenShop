@@ -26,6 +26,21 @@ contract TokenShop is Ownable {
     /// @notice Price of one token in USD, represented with 18 decimals.
     uint256 public constant TOKEN_PRICE_USD = 3 * 10 ** TOKEN_DECIMAL;
 
+    /**
+     * @notice Emitted when a buyer successfully purchases and receives tokens.
+     * @param buyer The address that receives the minted tokens.
+     * @param amount The amount of tokens minted to the buyer.
+     */
+    event MintSucceed(address indexed buyer, uint256 amount);
+
+    /**
+     * @notice Emitted when ETH is successfully withdrawn from the TokenShop.
+     * @param from The address from which the ETH is withdrawn.
+     * @param to The address receiving the withdrawn ETH.
+     * @param amount The amount of ETH withdrawn.
+     */
+    event Withdraw(address indexed from, address indexed to, uint256 amount);
+
     /// @notice Thrown when a user sends zero ETH to purchase tokens.
     error AmountMustBeMoreThanZero();
 
@@ -53,7 +68,9 @@ contract TokenShop is Ownable {
      */
     receive() external payable {
         if (msg.value == 0) revert AmountMustBeMoreThanZero();
-        erc20Token.mint(msg.sender, amountToBuy(msg.value));
+        uint256 tokenAmount = amountToBuy(msg.value);
+        erc20Token.mint(msg.sender, tokenAmount);
+        emit MintSucceed(msg.sender, tokenAmount);
     }
 
     /**
@@ -83,10 +100,16 @@ contract TokenShop is Ownable {
      * @notice Withdraws all ETH held by the shop.
      * @dev Can only be called by the contract owner.
      *      Reverts if the contract has no ETH or if the transfer fails.
+     *      Emits a Withdraw event after a successful transfer.
      */
     function withdraw() external onlyOwner {
         if (address(this).balance == 0) revert NoFundToWithdraw();
-        (bool success,) = payable(msg.sender).call{value: address(this).balance}("");
+
+        uint256 totalBal = address(this).balance;
+
+        (bool success,) = payable(msg.sender).call{value: totalBal}("");
         if (!success) revert WithdrawFailed();
+
+        emit Withdraw(address(this), msg.sender, totalBal);
     }
 }
