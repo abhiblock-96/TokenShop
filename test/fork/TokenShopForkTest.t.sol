@@ -124,8 +124,7 @@ contract TokenShopForkTest is Test {
         token.grantRole(minterRole, address(shop));
 
         vm.prank(buyer);
-        (bool success,) = address(shop).call{value: 2 ether}("");
-        assertTrue(success);
+        shop.buyTokens{value: 2 ether}();
 
         assertEq(token.balanceOf(buyer), shop.amountToBuy(2 ether));
     }
@@ -154,8 +153,7 @@ contract TokenShopForkTest is Test {
         token.grantRole(minterRole, address(shop));
 
         vm.prank(buyer);
-        (bool success,) = address(shop).call{value: 2 ether}("");
-        assertTrue(success);
+        shop.buyTokens{value: 2 ether}();
 
         assertEq(token.balanceOf(buyer), shop.amountToBuy(2 ether));
     }
@@ -184,8 +182,7 @@ contract TokenShopForkTest is Test {
         token.grantRole(minterRole, address(shop));
 
         vm.prank(buyer);
-        (bool success,) = address(shop).call{value: 2 ether}("");
-        assertTrue(success);
+        shop.buyTokens{value: 2 ether}();
 
         assertEq(token.balanceOf(buyer), shop.amountToBuy(2 ether));
     }

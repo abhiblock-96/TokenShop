@@ -20,6 +20,7 @@ contract TokenShopFuzz is BaseContract {
     ) external {
         vm.assume(buyer1 != address(0) && buyer1 != address(tokenShop));
         vm.assume(buyer2 != address(0) && buyer2 != address(tokenShop));
+        vm.assume(buyer1 != buyer2);
 
         ethBalance = bound(ethBalance, 2 ether, 100 ether);
         buyer1EthAmount = bound(buyer1EthAmount, 1 ether, ethBalance);
@@ -33,16 +34,14 @@ contract TokenShopFuzz is BaseContract {
         uint256 buyer1AmtBefore = myToken.balanceOf(buyer1);
 
         vm.prank(buyer1);
-        (bool success1,) = payable(tokenShop).call{value: buyer1EthAmount}("");
-        assertTrue(success1);
+        tokenShop.buyTokens{value: buyer1EthAmount}();
 
         uint256 buyer1AmtAfter = myToken.balanceOf(buyer1);
 
         uint256 buyer2AmtBefore = myToken.balanceOf(buyer2);
 
         vm.prank(buyer2);
-        (bool success2,) = payable(tokenShop).call{value: buyer2EthAmount}("");
-        assertTrue(success2);
+        tokenShop.buyTokens{value: buyer2EthAmount}();
 
         uint256 buyer2AmtAfter = myToken.balanceOf(buyer2);
 
@@ -64,6 +63,7 @@ contract TokenShopFuzz is BaseContract {
     ) external {
         vm.assume(buyer1 != address(0) && buyer1 != address(tokenShop));
         vm.assume(buyer2 != address(0) && buyer2 != address(tokenShop));
+        vm.assume(buyer1 != buyer2);
 
         ethBalance = bound(ethBalance, 2 ether, 100 ether);
         buyer1EthAmount = bound(buyer1EthAmount, 1 ether, ethBalance);
@@ -77,14 +77,12 @@ contract TokenShopFuzz is BaseContract {
         assertEq(myToken.totalSupply(), 0);
 
         vm.prank(buyer1);
-        (bool success1,) = payable(tokenShop).call{value: buyer1EthAmount}("");
-        assertTrue(success1);
+        tokenShop.buyTokens{value: buyer1EthAmount}();
 
         uint256 buyer1Amt = myToken.balanceOf(buyer1);
 
         vm.prank(buyer2);
-        (bool success2,) = payable(tokenShop).call{value: buyer2EthAmount}("");
-        assertTrue(success2);
+        tokenShop.buyTokens{value: buyer2EthAmount}();
 
         uint256 buyer2Amt = myToken.balanceOf(buyer2);
 
@@ -104,6 +102,7 @@ contract TokenShopFuzz is BaseContract {
     ) external {
         vm.assume(buyer1 != address(0) && buyer1 != address(tokenShop));
         vm.assume(buyer2 != address(0) && buyer2 != address(tokenShop));
+        vm.assume(buyer1 != buyer2);
 
         ethBalance = bound(ethBalance, 2 ether, 100 ether);
         buyer1EthAmount = bound(buyer1EthAmount, 1 ether, ethBalance);
@@ -117,12 +116,10 @@ contract TokenShopFuzz is BaseContract {
         uint256 vaultBalBefore = address(tokenShop).balance;
 
         vm.prank(buyer1);
-        (bool success1,) = payable(tokenShop).call{value: buyer1EthAmount}("");
-        assertTrue(success1);
+        tokenShop.buyTokens{value: buyer1EthAmount}();
 
         vm.prank(buyer2);
-        (bool success2,) = payable(tokenShop).call{value: buyer2EthAmount}("");
-        assertTrue(success2);
+        tokenShop.buyTokens{value: buyer2EthAmount}();
 
         uint256 vaultBalAfter = address(tokenShop).balance;
 
@@ -154,14 +151,12 @@ contract TokenShopFuzz is BaseContract {
         uint256 expectedTokens2 = tokenShop.amountToBuy(buyerEthAmount2);
 
         vm.prank(buyer);
-        (bool success1,) = payable(tokenShop).call{value: buyerEthAmount1}("");
-        assertTrue(success1);
+        tokenShop.buyTokens{value: buyerEthAmount1}();
 
         uint256 buyerTokensAfterFirstPurchase = myToken.balanceOf(buyer);
 
         vm.prank(buyer);
-        (bool success2,) = payable(tokenShop).call{value: buyerEthAmount2}("");
-        assertTrue(success2);
+        tokenShop.buyTokens{value: buyerEthAmount2}();
 
         uint256 buyerTokensAfterSecondPurchase = myToken.balanceOf(buyer);
 
@@ -195,12 +190,10 @@ contract TokenShopFuzz is BaseContract {
         uint256 vaultEthBefore = address(tokenShop).balance;
 
         vm.prank(buyer);
-        (bool success1,) = payable(tokenShop).call{value: buyerEthAmount1}("");
-        assertTrue(success1);
+        tokenShop.buyTokens{value: buyerEthAmount1}();
 
         vm.prank(buyer);
-        (bool success2,) = payable(tokenShop).call{value: buyerEthAmount2}("");
-        assertTrue(success2);
+        tokenShop.buyTokens{value: buyerEthAmount2}();
 
         uint256 buyerTokensAfter = myToken.balanceOf(buyer);
         uint256 vaultEthAfter = address(tokenShop).balance;
@@ -235,14 +228,11 @@ contract TokenShopFuzz is BaseContract {
         vm.deal(buyer, ethBalance);
 
         vm.prank(buyer);
-        (bool success1,) = payable(tokenShop).call{value: buyerEthAmount1}("");
-        assertTrue(success1);
+        tokenShop.buyTokens{value: buyerEthAmount1}();
 
         uint256 expectedTokenBefore = tokenShop.amountToBuy(buyerEthAmount1);
 
         vm.prank(buyer);
-        (bool success2,) = payable(tokenShop).call{value: buyerEthAmount2}("");
-        assertTrue(success2);
 
         uint256 expectedTokenAfter = tokenShop.amountToBuy(buyerEthAmount2);
 
@@ -273,12 +263,10 @@ contract TokenShopFuzz is BaseContract {
         _grantRole();
 
         vm.prank(buyer1);
-        (bool success1,) = payable(tokenShop).call{value: buyer1EthAmount}("");
-        assertTrue(success1);
+        tokenShop.buyTokens{value: buyer1EthAmount}();
 
         vm.prank(buyer2);
-        (bool success2,) = payable(tokenShop).call{value: buyer2EthAmount}("");
-        assertTrue(success2);
+        tokenShop.buyTokens{value: buyer2EthAmount}();
 
         uint256 adminBalBefore = admin.balance;
 
@@ -314,8 +302,7 @@ contract TokenShopFuzz is BaseContract {
         _grantRole();
 
         vm.prank(buyer);
-        (bool success1,) = payable(tokenShop).call{value: buyerEthAmount}("");
-        assertTrue(success1);
+        tokenShop.buyTokens{value: buyerEthAmount}();
 
         vm.prank(account);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, account));

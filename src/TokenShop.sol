@@ -50,6 +50,10 @@ contract TokenShop is Ownable {
     /// @notice Thrown when the ETH withdrawal fails.
     error WithdrawFailed();
 
+    /// @notice Thrown when ETH is sent directly to the contract instead of
+    ///            through the designated purchase function.
+    error DirectEtherNotAcceptable();
+
     /**
      * @notice Initializes the TokenShop.
      * @param _tokenPrice Address of the Chainlink ETH/USD price feed.
@@ -61,16 +65,21 @@ contract TokenShop is Ownable {
     }
 
     /**
-     * @notice Allows users to purchase tokens by sending ETH directly
-     *         to the contract.
-     * @dev The amount of FBCK tokens minted is calculated using the
-     *      current ETH/USD Chainlink price.
+     * @notice Rejects direct ETH transfers sent to the contract.
+     * @dev ETH must be sent through the designated token purchase function.
      */
     receive() external payable {
-        if (msg.value == 0) revert AmountMustBeMoreThanZero();
-        uint256 tokenAmount = amountToBuy(msg.value);
-        erc20Token.mint(msg.sender, tokenAmount);
-        emit MintSucceed(msg.sender, tokenAmount);
+        revert DirectEtherNotAcceptable();
+    }
+
+    /**
+     *
+     * @notice Rejects calls to unknown function selectors and direct ETH transfers.
+     * @dev Prevents ETH from being accidentally sent to the contract through
+     *      an unsupported function call or calldata.
+     */
+    fallback() external payable {
+        revert DirectEtherNotAcceptable();
     }
 
     /**
@@ -94,6 +103,23 @@ contract TokenShop is Ownable {
         uint256 ethPrice = uint256(getChainlinkETHPrice()) * 10 ** 10;
         uint256 ethAmountInUsd = (amount * ethPrice) / 10 ** 18;
         return (ethAmountInUsd * 10 ** 18) / TOKEN_PRICE_USD;
+    }
+
+    /**
+     * @notice Allows users to purchase ERC20 tokens by sending ETH.
+     * @dev The amount of tokens minted is calculated based on the ETH amount
+     *      sent and the current pricing mechanism.
+     *      Reverts if no ETH is sent.
+     *      Emits a MintSucceed event after tokens are successfully minted.
+     */
+    function buyTokens() external payable {
+        if (msg.value == 0) revert AmountMustBeMoreThanZero();
+
+        uint256 tokenAmount = amountToBuy(msg.value);
+
+        erc20Token.mint(msg.sender, tokenAmount);
+
+        emit MintSucceed(msg.sender, tokenAmount);
     }
 
     /**

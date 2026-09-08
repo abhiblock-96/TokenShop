@@ -59,12 +59,11 @@ contract BaseContract is Test {
      *      of ETH into the TokenShop contract.
      * @param amount The amount of ETH to deposit.
      */
-    function _deposit(uint256 amount) internal {
+    function _buyToken(uint256 amount) internal {
         _grantRole();
 
         vm.prank(minter1);
-        (bool success,) = address(tokenShop).call{value: amount}("");
-        assertTrue(success);
+        tokenShop.buyTokens{value: amount}();
     }
 
     /**

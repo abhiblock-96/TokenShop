@@ -37,16 +37,15 @@ contract TokenShopUnitTest is BaseContract {
     }
 
     /**
-     * @notice Verifies that sending ETH to TokenShop successfully mints
-     *         the expected amount of MyToken to the buyer.
+     * @notice Verifies that a buyer can purchase tokens by sending ETH through
+     *         the buyTokens function and receives the expected amount of tokens.
      * @dev The TokenShop must have MINTER_ROLE before the purchase.
      */
     function test_buyToken_MintsExpectedAmount() external {
         _grantRole();
 
         vm.prank(minter1);
-        (bool success,) = address(tokenShop).call{value: 2 ether}("");
-        assertTrue(success);
+        tokenShop.buyTokens{value: 2 ether}();
 
         assertEq(myToken.balanceOf(minter1), tokenShop.amountToBuy(2 ether));
     }
@@ -59,7 +58,7 @@ contract TokenShopUnitTest is BaseContract {
 
         vm.prank(minter1);
         vm.expectRevert(TokenShop.AmountMustBeMoreThanZero.selector);
-        (bool success,) = address(tokenShop).call{value: 0 ether}("");
+        tokenShop.buyTokens{value: 0}();
     }
 
     /**
@@ -76,7 +75,7 @@ contract TokenShopUnitTest is BaseContract {
             abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, address(tokenShop), role)
         );
 
-        (bool success,) = payable(address(tokenShop)).call{value: 2 ether}("");
+        tokenShop.buyTokens{value: 2 ether}();
     }
 
     /**
@@ -94,7 +93,7 @@ contract TokenShopUnitTest is BaseContract {
             abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, address(tokenShop), role)
         );
 
-        (bool success,) = payable(address(tokenShop)).call{value: 2 ether}("");
+        tokenShop.buyTokens{value: 2 ether}();
 
         uint256 minterBalAfter = minter1.balance;
 
@@ -131,6 +130,30 @@ contract TokenShopUnitTest is BaseContract {
     }
 
     /**
+     * @notice Verifies that the contract rejects plain ETH transfers.
+     * @dev Sends ETH directly to TokenShop without calldata and expects
+     *      the transfer to revert with DirectEtherNotAcceptable.
+     */
+    function test_receive_RevertsOnPlainEtherTransfer() external {
+        vm.prank(minter1);
+        vm.expectRevert(TokenShop.DirectEtherNotAcceptable.selector);
+        (bool success,) = payable(tokenShop).call{value: 2 ether}("");
+    }
+
+    /**
+     * @notice Verifies that the contract rejects ETH transfers with an
+     *      unsupported function selector.
+     * @dev Calls TokenShop with the buyTokens selector using a low-level call
+     *      and expects the fallback function to revert with
+     *      DirectEtherNotAcceptable.
+     */
+    function test_fallback_RevertsOnUnsupportedCall() external {
+        vm.prank(minter1);
+        vm.expectRevert(TokenShop.DirectEtherNotAcceptable.selector);
+        (bool success,) = payable(tokenShop).call{value: 2 ether}(abi.encodeWithSelector(tokenShop.buyTokens.selector));
+    }
+
+    /**
      * @notice Verifies that a successful token purchase emits the
      *         MintSucceed event with the correct buyer and token amount.
      */
@@ -141,15 +164,14 @@ contract TokenShopUnitTest is BaseContract {
         emit TokenShop.MintSucceed(minter1, tokenShop.amountToBuy(1 ether));
 
         vm.prank(minter1);
-        (bool success,) = address(tokenShop).call{value: 1 ether}("");
-        assertTrue(success);
+        tokenShop.buyTokens{value: 1 ether}();
     }
 
     /**
      * @notice Verifies that the owner can withdraw deposited ETH.
      */
     function test_withdraw_SucceedsForOwner() external {
-        _deposit(2 ether);
+        _buyToken(2 ether);
 
         vm.prank(admin);
         tokenShop.withdraw();
@@ -162,7 +184,7 @@ contract TokenShopUnitTest is BaseContract {
      * @notice Verifies that a non-owner cannot withdraw ETH from TokenShop.
      */
     function test_withdraw_RevertIfNonOwnerCall() external {
-        _deposit(2 ether);
+        _buyToken(2 ether);
 
         vm.prank(minter1);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, minter1));
@@ -185,7 +207,7 @@ contract TokenShopUnitTest is BaseContract {
      *         the owner fails.
      */
     function test_withdraw_RevertIfTransferFails() external {
-        _deposit(2 ether);
+        _buyToken(2 ether);
 
         TestContract testContract = new TestContract();
         _transferOwnership(address(testContract));
@@ -201,12 +223,10 @@ contract TokenShopUnitTest is BaseContract {
      *         accumulated from multiple deposits.
      */
     function test_withdraw_WithdrawsCompleteBalanceForMultipleDeposits() external {
-        _grantRole();
-        _deposit(1 ether);
+        _buyToken(1 ether);
 
         vm.prank(minter1);
-        (bool success,) = payable(address(tokenShop)).call{value: 3 ether}("");
-        assertTrue(success);
+        tokenShop.buyTokens{value: 3 ether}();
 
         uint256 adminBalBefore = admin.balance;
         uint256 vaultBalBefore = address(tokenShop).balance;
@@ -226,7 +246,7 @@ contract TokenShopUnitTest is BaseContract {
      *         event with the TokenShop, owner, and withdrawn amount.
      */
     function test_withdraw_EmitsWithdrawEvent() external {
-        _deposit(2 ether);
+        _buyToken(2 ether);
 
         vm.expectEmit(true, true, false, true);
         emit TokenShop.Withdraw(address(tokenShop), admin, address(tokenShop).balance);
@@ -241,5 +261,22 @@ contract TokenShopUnitTest is BaseContract {
      */
     function test_getChainlinkETHPrice_ReturnsETHPriceInUSD() external view {
         assertEq(tokenShop.getChainlinkETHPrice(), 244500000000);
+    }
+
+    /**
+     * @notice Verifies that buying tokens with the maximum uint256 ETH amount
+     *         reverts.
+     * @dev Gives the buyer a balance of type(uint256).max, attempts to purchase
+     *      tokens by sending the maximum possible uint256 value as ETH, and
+     *      expects the transaction to revert.
+     */
+    function test_buyTokens_RevertsWhenETHAmountIsMax() external {
+        address buyer = makeAddr("buyer");
+        uint256 maxAmt = type(uint256).max;
+        vm.deal(buyer, maxAmt);
+
+        vm.prank(buyer);
+        vm.expectRevert();
+        tokenShop.buyTokens{value: maxAmt}();
     }
 }
