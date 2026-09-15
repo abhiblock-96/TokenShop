@@ -12,6 +12,14 @@ Built with **Solidity, Foundry, OpenZeppelin, and Chainlink Price Feeds**, this 
 
 ---
 
+## Live Demo
+
+**[Try FomoShop Live](https://fomo-shop-zeta.vercel.app/)**
+
+The frontend allows users to interact with the TokenShop smart contract through their wallet.
+
+---
+
 ## Overview
 
 TokenShop implements an on-chain token purchasing mechanism where:
@@ -322,6 +330,8 @@ TokenShop/
 ├── .github/
 │   └── workflows/
 │       └── test.yml
+|
+├── frontend/
 │
 ├── lib/
 │   ├── chainlink-evm/
