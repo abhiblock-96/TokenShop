@@ -1,0 +1,24 @@
+@import "tailwindcss";
+* {
+  box-sizing: border-box;
+  font-family: "Times New Roman", Times, serif, monospace;
+  font-size: large;
+}
+
+html,
+body {
+  background-color: rgb(245, 238, 230);
+  height: 100%;
+  width: 100%;
+  background-color: #0b0b0f;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
