@@ -15,10 +15,10 @@ import {MyToken} from "src/MyToken.sol";
  */
 contract TokenShop is Ownable {
     /// @notice The ERC20 token being sold by the shop.
-    MyToken internal erc20Token;
+    MyToken internal immutable erc20Token;
 
     /// @notice Chainlink price feed used to obtain the ETH/USD price.
-    AggregatorV3Interface internal tokenPrice;
+    AggregatorV3Interface internal immutable tokenPrice;
 
     /// @notice Number of decimals used by the token.
     uint256 public constant TOKEN_DECIMAL = 18;
@@ -101,7 +101,7 @@ contract TokenShop is Ownable {
      */
     function amountToBuy(uint256 amount) public view returns (uint256) {
         uint256 ethPrice = uint256(getChainlinkETHPrice()) * 10 ** 10;
-        uint256 ethAmountInUsd = (amount * ethPrice) / 10 ** 18;
+        uint256 ethAmountInUsd = (amount * ethPrice) / (10 ** 18);
         return (ethAmountInUsd * 10 ** 18) / TOKEN_PRICE_USD;
     }
 
@@ -129,7 +129,7 @@ contract TokenShop is Ownable {
      *      Emits a Withdraw event after a successful transfer.
      */
     function withdraw() external onlyOwner {
-        if (address(this).balance == 0) revert NoFundToWithdraw();
+        if (address(this).balance <= 0) revert NoFundToWithdraw();
 
         uint256 totalBal = address(this).balance;
 
