@@ -21,17 +21,17 @@ contract TokenShop is Ownable {
     AggregatorV3Interface internal immutable tokenPrice;
 
     /// @notice Number of decimals used by the token.
-    uint256 public constant TOKEN_DECIMAL = 18;
+    uint256 public immutable TOKEN_DECIMAL;
 
     /// @notice Price of one token in USD, represented with 18 decimals.
-    uint256 public constant TOKEN_PRICE_USD = 3 * 10 ** TOKEN_DECIMAL;
+    uint256 public immutable TOKEN_PRICE_USD;
 
     /**
      * @notice Emitted when a buyer successfully purchases and receives tokens.
      * @param buyer The address that receives the minted tokens.
      * @param amount The amount of tokens minted to the buyer.
      */
-    event MintSucceed(address indexed buyer, uint256 amount);
+    event BuySuccessfull(address indexed buyer, uint256 amount);
 
     /**
      * @notice Emitted when ETH is successfully withdrawn from the TokenShop.
@@ -59,9 +59,11 @@ contract TokenShop is Ownable {
      * @param _tokenPrice Address of the Chainlink ETH/USD price feed.
      * @param _token Address of the FomoBlock ERC20 token contract.
      */
-    constructor(address _tokenPrice, address _token) Ownable(msg.sender) {
+    constructor(address _tokenPrice, address _token, uint256 _price) Ownable(msg.sender) {
         erc20Token = MyToken(_token);
         tokenPrice = AggregatorV3Interface(_tokenPrice);
+        TOKEN_DECIMAL = erc20Token.decimals();
+        TOKEN_PRICE_USD = _price * 10 ** TOKEN_DECIMAL;
     }
 
     /**
@@ -119,7 +121,7 @@ contract TokenShop is Ownable {
 
         erc20Token.mint(msg.sender, tokenAmount);
 
-        emit MintSucceed(msg.sender, tokenAmount);
+        emit BuySuccessfull(msg.sender, tokenAmount);
     }
 
     /**

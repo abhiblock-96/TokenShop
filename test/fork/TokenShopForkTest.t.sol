@@ -35,6 +35,8 @@ contract TokenShopForkTest is Test {
     /// @notice Identifier of the Ethereum Mainnet fork.
     uint256 internal mainnetFork;
 
+    uint256 internal constant TOKEN_PRICE = 3;
+
     /**
      * @notice Creates the Sepolia and Mainnet forks.
      * @dev The created forks are selected inside their respective setup
@@ -59,7 +61,7 @@ contract TokenShopForkTest is Test {
 
         vm.startPrank(owner);
         token = new MyToken();
-        shop = new TokenShop(priceFeed, address(token));
+        shop = new TokenShop(priceFeed, address(token), TOKEN_PRICE);
         vm.stopPrank();
 
         vm.deal(buyer, 10 ether);
@@ -79,7 +81,7 @@ contract TokenShopForkTest is Test {
 
         vm.startPrank(owner);
         token = new MyToken();
-        shop = new TokenShop(priceFeed, address(token));
+        shop = new TokenShop(priceFeed, address(token), TOKEN_PRICE);
         vm.stopPrank();
 
         vm.deal(buyer, 10 ether);
@@ -96,7 +98,7 @@ contract TokenShopForkTest is Test {
 
         vm.startPrank(owner);
         token = new MyToken();
-        shop = new TokenShop(priceFeed, address(token));
+        shop = new TokenShop(priceFeed, address(token), TOKEN_PRICE);
         vm.stopPrank();
 
         vm.deal(buyer, 10 ether);

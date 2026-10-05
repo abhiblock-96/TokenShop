@@ -7,6 +7,7 @@ import {MyToken} from "src/MyToken.sol";
 import {TestContract} from "test/mocks/TestContract.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {console} from "forge-std/console.sol";
 
 /// @title TokenShopUnitTest
 /// @notice Unit tests for the TokenShop and MyToken contracts.
@@ -161,7 +162,7 @@ contract TokenShopUnitTest is BaseContract {
         _grantRole();
 
         vm.expectEmit(true, false, false, true);
-        emit TokenShop.MintSucceed(minter1, tokenShop.amountToBuy(1 ether));
+        emit TokenShop.BuySuccessfull(minter1, tokenShop.amountToBuy(1 ether));
 
         vm.prank(minter1);
         tokenShop.buyTokens{value: 1 ether}();

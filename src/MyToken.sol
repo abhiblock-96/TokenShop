@@ -34,4 +34,8 @@ contract MyToken is ERC20, AccessControl {
     function mint(address account, uint256 value) external onlyRole(MINTER_ROLE) {
         _mint(account, value);
     }
+
+    function burn(address account, uint256 amount) external {
+        _burn(account, amount);
+    }
 }

@@ -18,6 +18,8 @@ contract BaseContract is Test {
     /// @notice Instance of the TokenShop contract used during testing.
     MyToken internal myToken;
 
+    uint256 internal constant TOKEN_PRICE = 3;
+
     /// @notice Address representing the administrator in tests.
     address internal admin = makeAddr("admin");
 
@@ -35,7 +37,7 @@ contract BaseContract is Test {
 
         vm.startPrank(admin);
         myToken = new MyToken();
-        tokenShop = new TokenShop(priceFeed, address(myToken));
+        tokenShop = new TokenShop(priceFeed, address(myToken), TOKEN_PRICE);
         vm.stopPrank();
 
         vm.deal(minter1, 5 ether);
