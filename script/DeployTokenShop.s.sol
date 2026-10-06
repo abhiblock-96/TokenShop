@@ -17,6 +17,8 @@ contract DeployTokenShop is Script {
     /// @notice Instance of the deployed TokenShop contract.
     TokenShop internal tokenShop;
 
+    uint256 internal constant price = 3;
+
     /**
      * @notice Deploys MyToken and TokenShop contracts.
      * @dev Retrieves the network-specific price feed from HelperConfig,
@@ -29,7 +31,7 @@ contract DeployTokenShop is Script {
 
         vm.startBroadcast();
         myToken = new MyToken();
-        tokenShop = new TokenShop(priceFeed, address(myToken));
+        tokenShop = new TokenShop(priceFeed, address(myToken), price);
         vm.stopBroadcast();
     }
 }
